@@ -1,0 +1,38 @@
+---
+title: "simulation other variance equation"
+author: "Katie Coburn"
+date: "11/17/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Code Setup
+
+```{r, message=FALSE}
+library(tidyverse)
+library(kableExtra)
+library(modelr)
+source("function_calculations.R")
+source("simulation_code.R")
+```
+
+## Results
+
+d1 and v1 are the effect size and variance estimates with the adjustment. d2 and v2 are "traditional" methods of estimating the effect size and variance. (Code for both of these is located in **"function_calculations.R"**.)
+
+We varied levels of n and the proportion of variability due to the interaction. Error variance (msw) and total variance (sigma total) were kept fixed. Block variance was adjusted based on interaction proportion. (Code for this is in **"simulation_code.R"**.)
+
+d2 is a constant here because it's calculated with only delta and sigma total, neither of which varies.
+
+v2 is constant across levels of interaction proportion because it's calculated with only sigma total and N.
+
+```{r}
+sim_results %>% 
+  # select(n, int_prop, d1, v1, d2, v2) %>% 
+  kbl() %>% 
+  kable_classic(full_width = F, html_font = "Cambria", position = "left")
+```
+

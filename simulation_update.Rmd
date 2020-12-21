@@ -1,0 +1,117 @@
+---
+title: "simulation update"
+author: "Katie Coburn"
+date: "11/17/2020"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+---
+
+## Setup
+
+```{r, message=FALSE, echo=FALSE}
+library(tidyverse)
+library(kableExtra)
+library(ggthemes)
+source("function_calculations.R")
+source("simulation_code.R")
+```
+
+d1 and v1 are the effect size and variance estimates with the adjustment. d2 and v2 are "traditional" methods of estimating the effect size and variance. (Code for both of these is located in **"function_calculations.R"**.)
+
+### Our Equations:
+
+Effect size:
+
+$$
+D_1 = \frac{\Delta}{\sqrt{\sigma^2_t}}\sqrt{\frac{(N - 2m)\sigma^2_e + (m - 1)(\sigma^2_e + 2n\sigma^2_\beta) + (m - 1)(\sigma^2_e + n\sigma^2_{\alpha\beta})}{(N - 2)\sigma^2_t}}
+$$
+
+Variance of effect size:
+
+$$
+v_1 = \frac{2}{mn}\left(\frac{\sigma^2_e + n\sigma^2_{\alpha\beta}}{\sigma^2_t}\right) + \frac{((N - 2 m)\sigma^4_e + (m - 1)(\sigma^2_e + 2n\sigma^2_{\beta})^2 + (m - 1)(\sigma^2_e + n\sigma^2_{\alpha\beta})^2)D_1^2}{2((N - 2m)\sigma^2_e + (m - 1)(\sigma^2_e + 2n\sigma^2_{\beta}) + (m - 1)(\sigma^2_e + n\sigma^2_{\alpha\beta}))^2}
+$$
+
+### Traditional Equations:
+
+Effect size:
+
+$$
+D_2 = \frac{\Delta}{\sqrt{\sigma^2_t}}
+$$
+
+<!-- Variance of effect size if interaction and block are **not** equal to zero: -->
+
+<!-- $$ -->
+<!-- v_2 = \frac{\sigma^2_t}{(N - 2)} -->
+<!-- $$ -->
+
+Variance of effect size:
+
+$$
+v_2 = \frac{2}{mn} + \frac{D_2^2}{2(N - 2)}
+$$
+
+## Calculations:
+
+We tested these functions out in a few cases:
+
+```{r, message=FALSE, echo=FALSE}
+sim_pars2 <- tribble(
+  ~case_num, ~delta, ~m, ~n, ~N, ~sigma_total, ~sigma_int, ~sigma_block, ~sigma_error,
+  1, 0.40, 2, 10, 40, 1, 0, 0, 1,
+  2, 0.40, 2, 10, 40, 1, 0.10, 0.40, 0.50,
+  3, 0.40, 2, 100, 400, 1, 0.10, 0.40, 0.50,
+  4, 0.40, 2, 500, 2000, 1, 0.10, 0.40, 0.50,
+  5, 0.40, 2, 10, 40, 1, 0.30, 0.20, 0.50,
+  6, 0.40, 2, 100, 400, 1, 0.30, 0.20, 0.50,
+  7, 0.40, 2, 500, 2000, 1, 0.30, 0.20, 0.50,
+  8, 0.40, 4, 10, 80, 1, 0.30, 0.20, 0.50,
+  9, 0.40, 8, 10, 160, 1, 0.30, 0.20, 0.50,
+  10, 0.40, 16, 10, 320, 1, 0.30, 0.20, 0.50,
+)
+
+# sim_pars2 <- tibble(delta = 0.40, m = c(2, 4), n = c(10, 50, 100, 500), N = (2*m*n), sigma_total = c(1, 4.475), sigma_int = c(0, 2), 
+#          sigma_block = c(0, 0), sigma_error = c(1, 2.475))
+sim_pars3 <- bind_cols(sim_pars2,
+          (sim_pars2 %>% pmap_dfr(par_est_calc)),
+          (sim_pars2 %>% pmap_dfr(trad_es_calc))) %>% 
+  select(-delta)
+
+sim_pars3 %>% 
+  kbl(col.names = c("case number", "m", "n", "N", "$\\sigma^2_{t}$", "$\\sigma^2_\\alpha\\beta$", "$\\sigma^2_\\beta$", "$\\sigma^2_e$", "d1", "v1", "d2", "v2")) %>% 
+  kable_minimal(full_width = F)
+```
+
+We noticed a few patterns. For one, our variance equation seems to be heavily influenced by the interaction and block variance. In cases #3, 4, and 5, as n increases, v1 appears to get closer to the interaction variance. However, in cases #8, #9, and #10, as m increases, this does not happen.
+
+## Simulations:
+
+We did 5000 replications per cell with 4 levels of interaction/block variance; (1) interaction and block are both 0; (2) interaction is 0, block is 0.50; (3) interaction is 0.10, block is 0.40; and (4) interaction is 0.30, block is 0.20. We also used 4 levels of n (sample size per cell), 10, 50, 100, and 500. m is fixed to 2 (generating data for the interaction across levels of m will be tricky, so we started with m of 2 and increased n to increase the sample size). This is 16 cells.
+
+This table shows the variance ratios. Note that in case (1), the variance estimates are equal. 
+
+```{r}
+sim_results_10 <- read_csv("sim_results_updated_dec16.csv")
+sim_results_10 %>% 
+  group_by(m, n, var_inter) %>% 
+  summarise_at(c("d1", "d2"), var) %>% 
+  mutate(actual_var_d1 = d1, actual_var_d2 = d2) %>% 
+  select(-c(d1, d2)) %>% 
+  cbind( (sim_results_10 %>% group_by(m, n, var_inter) %>% summarise_at(c("v1", "v2"), mean) %>% ungroup() %>% select(v1, v2))) %>% 
+  mutate(ratio_d1 = v1/actual_var_d1,
+         ratio_d2 = v2/actual_var_d2) %>% 
+  kbl() %>% 
+  kable_minimal(full_width = F)
+```
+
+```{r, message=FALSE, echo=FALSE}
+sim_resultsdec16 <- read_csv("sim_results_updated_dec16.csv")
+sim_resultsdec16 %>% 
+  group_by(n, var_inter, m) %>% 
+  summarise_at(vars(d1, v1, d2, v2), mean) %>% 
+  kbl() %>% 
+  kable_minimal(full_width = F)
+```

@@ -1,0 +1,321 @@
+---
+title: "simulation"
+author: "Katie Coburn"
+date: "11/17/2020"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+---
+
+## Setup
+
+```{r, message=FALSE, echo=FALSE}
+library(tidyverse)
+library(kableExtra)
+library(ggthemes)
+source("function_calculations.R")
+source("simulation_code.R")
+```
+
+d1 and v1 are the effect size and variance estimates with the adjustment. d2 and v2 are "traditional" methods of estimating the effect size and variance. (Code for both of these is located in **"function_calculations.R"**.)
+
+### Our Equations:
+Effect size:
+
+$$
+D_1 = \frac{\Delta}{\sqrt{\sigma^2_t}}\sqrt{\frac{(N - 2m)\sigma^2_e + (m - 1)(\sigma^2_e + 2n\sigma^2_\beta) + (m - 1)(\sigma^2_e + n\sigma^2_{\alpha\beta})}{(N - 2)\sigma^2_t}}
+$$
+Variance of effect size:
+
+$$
+v_1 = \frac{2}{mn}\left(\frac{\sigma^2_e + n\sigma^2_{\alpha\beta}}{\sigma^2_t}\right) + \frac{((N - 2 m)\sigma^4_e + (m - 1)(\sigma^2_e + 2n\sigma^2_{\beta})^2 + (m - 1)(\sigma^2_e + n\sigma^2_{\alpha\beta})^2)D_1^2}{2((N - 2m)\sigma^2_e + (m - 1)(\sigma^2_e + 2n\sigma^2_{\beta}) + (m - 1)(\sigma^2_e + n\sigma^2_{\alpha\beta}))^2}
+$$
+
+### Traditional Equations:
+
+Effect size:
+
+$$
+D_2 = \frac{\Delta}{\sqrt{\sigma^2_t}}
+$$
+Variance of effect size if interaction and block are **not** equal to zero:
+
+$$
+v_2 = \frac{\sigma^2_t}{(N - 2)}
+$$
+Variance of effect size if interaction and block are **not** equal to zero:
+
+$$
+v_2 = \frac{2}{mn} + \frac{D_2^2}{2(N - 2)}
+$$
+
+## Calculations:
+
+Here is a case where both $\sigma^2_{\alpha\beta}$ and $\sigma^2_{\beta}$ were **fixed to 0**:
+
+```{r}
+sim_pars2 <- tibble(delta = 0.40, m = 4, n = 50, N = (2*m*n), sigma_total = 4.475, sigma_int = 2, 
+         sigma_block = 0, sigma_error = 2.475)
+sim_pars3 <- bind_cols(sim_pars2,
+          (sim_pars2 %>% pmap_dfr(par_est_calc)),
+          (sim_pars2 %>% pmap_dfr(trad_es_calc))) %>% 
+  select(-delta)
+
+sim_pars3 %>% 
+  kbl(col.names = c("m", "n", "N", "$\\sigma^2_{t}$", "$\\sigma^2_\\alpha\\beta$", "$\\sigma^2_\\beta$", "$\\sigma^2_e$", "d1", "v1", "d2", "v2")) %>% 
+  kable_minimal(full_width = F)
+```
+
+We can calculate an F-statistic:
+
+```{r}
+sim_pars3$v1/sim_pars3$v2
+```
+
+We varied levels of n and the proportion of variability due to the interaction. $\sigma^2_e$ and $\sigma^2_t$ were kept fixed. $\sigma^2_\beta$ was adjusted based on interaction proportion. (Code for this is in **"simulation_code.R"**.) Levels used were: $m = 2, 4$; $n = 10, 50$; $proportion = .10, .30$.
+
+```{r}
+sim_results %>% 
+  select(-c(delta, sigma_total, msb, msab, sigma_error)) %>% 
+  kbl(col.names = c("m", "n", "N", "$\\sigma^2_{\\alpha\\beta}$ Prop.", "$\\sigma^2_{\\alpha\\beta}$", "$\\sigma^2_\\beta$", "d1", "v1", "d2", "v2")) %>% 
+  kable_minimal(full_width = F)
+```
+
+## Simulations
+
+We varied three factors -- m (number of blocks) as 2, 4, or 10, n (number of participants per cell) as 10, 50, or 100, and interaction proportion (the proportion of variability due to the interaction between treatment and block) as 0.00, 0.10, or 0.30. This resulted in a total of 3 * 3 * 3 = 27 cells. We ran 10,000 replications per cell.
+
+We set the population value for delta to 0.40, the grand mean to 0, the total variance to 1, and the error variance to 0.50. As a result, the block variance is determined by 0.50 - interaction proportion (0.50, 0.40, or 0.20, respectively).
+
+We present the plots first, and a table of the cell average estimates at the end.
+
+### Effect Size Bias Code V1 (10000 reps)
+
+```{r, message=FALSE}
+sim_results2 <- read_csv("sim_results.csv")
+sim_results2 %>% 
+  pivot_longer(cols = c(d1, v1, d2, v2), names_to = "estimate", values_to = "value") %>% 
+  filter(estimate != "v1" & estimate != "v2") %>% 
+  mutate(`Interaction Proportion` = var_inter, n = k_count, j_count = factor(j_count)) %>% 
+  ggplot(aes(x = j_count, y = (value - 0.4), color = estimate, group = estimate)) + geom_point() +
+  geom_line() + facet_grid(n ~ `Interaction Proportion`, labeller = label_both) +
+  theme_bw() + geom_hline(yintercept = 0) + xlab("m") + ylab("Bias") + labs(color = "Estimate") +
+  scale_color_discrete(labels = c("New Method", "Traditional Method"))
+```
+
+### Effect Size Bias Code V2 (10000 reps)
+
+```{r, message=FALSE}
+sim_resultskarina <- read_csv("karinacoderesults.csv")
+
+sim_resultskarina %>% group_by(m, n, var_inter) %>% 
+  summarise_at(vars(d1, v1, d2, v2, empir_var), mean) %>% 
+  pivot_longer(cols = c(d1, v1, d2, v2), names_to = "estimate", values_to = "value") %>% 
+  filter(estimate != "v1" & estimate != "v2") %>% 
+  mutate(`Interaction Proportion` = var_inter, n = n, m = factor(m)) %>% 
+  ggplot(aes(x = m, y = (value - 0.4), color = estimate, group = estimate)) + geom_point() +
+  geom_line() + facet_grid(n ~ `Interaction Proportion`, labeller = label_both) +
+  theme_bw() + geom_hline(yintercept = 0) + xlab("m") + ylab("Bias") + labs(color = "Estimate") +
+  scale_color_discrete(labels = c("New Method", "Traditional Method"))
+```
+
+### take three
+
+```{r, message=FALSE}
+sim_resultsdec16 <- read_csv("sim_results_updated_dec16.csv")
+sim_resultsdec16 %>% 
+  group_by(n, var_inter, m) %>% 
+  summarise_at(vars(d1, v1, d2, v2), mean) %>% 
+  pivot_longer(cols = c(d1, v1, d2, v2), names_to = "estimate", values_to = "value") %>% 
+  filter(estimate != "v1" & estimate != "v2") %>% 
+  mutate(`Interaction Proportion` = var_inter, n = n, m = factor(m)) %>% 
+  ggplot(aes(x = n, y = (value - 0.4), color = estimate, group = estimate)) + geom_point() +
+  geom_line() + facet_grid(m ~ `Interaction Proportion`, labeller = label_both) +
+  theme_bw() + geom_hline(yintercept = 0) + xlab("n") + ylab("Bias") + labs(color = "Estimate") +
+  scale_color_discrete(labels = c("New Method", "Traditional Method"))
+```
+
+<!-- ### Effect Size Relative Bias Code V 1 -->
+
+<!-- ```{r} -->
+<!-- sim_results2 %>%  -->
+<!--   pivot_longer(cols = c(d1, v1, d2, v2), names_to = "estimate", values_to = "value") %>%  -->
+<!--   filter(estimate != "v1" & estimate != "v2") %>%  -->
+<!--   mutate(`Interaction Proportion` = var_inter, n = k_count, j_count = factor(j_count)) %>%  -->
+<!--   ggplot(aes(x = j_count, y = ((value - 0.4)/0.4), color = estimate, group = estimate)) + geom_point() +  -->
+<!--   geom_line() + facet_grid(n ~ `Interaction Proportion`, labeller = label_both) + -->
+<!--   theme_bw() + geom_hline(yintercept = 0) + xlab("m") + ylab("Relative Bias") + labs(color = "Estimate") + -->
+<!--   scale_color_discrete(labels = c("New Method", "Traditional Method")) -->
+<!-- ``` -->
+
+<!-- ### Variance Ratio -->
+
+<!-- ```{r} -->
+<!-- sim_results2 %>%  -->
+<!--   mutate(m = j_count, n = k_count, msw = var_error, sigma_int = var_inter, sigma_total = 1, N = (2 * m * n), sigma_block = (0.5 - var_inter)) %>%  -->
+<!--   mutate(ratio = v1/v2) %>%  -->
+<!--     pivot_longer(cols = c(d1, v1, d2, v2), names_to = "estimate", values_to = "value") %>%  -->
+<!--   filter(estimate != "d1" & estimate != "d2") %>%  -->
+<!--   mutate(`Interaction Proportion` = var_inter, n = k_count, j_count = factor(j_count)) %>%  -->
+<!--   ggplot(aes(x = j_count, y = ratio, color = estimate, group = estimate)) + geom_point() +  -->
+<!--   geom_line() + facet_grid(n ~ `Interaction Proportion`, labeller = label_both) + -->
+<!--   theme_bw() + geom_hline(yintercept = 0) + xlab("m") + ylab("Variance Ratio") + labs(color = "Estimate") + -->
+<!--   scale_color_discrete(labels = c("NA", "New Method/Traditional Method"), drop = TRUE) -->
+<!-- ``` -->
+
+<!-- ### Variance Relative Bias -->
+
+<!-- ```{r} -->
+<!-- sim_results2 %>%  -->
+<!--   mutate(m = j_count, n = k_count, msw = var_error, sigma_int = var_inter, sigma_total = 1, N = (2 * m * n), sigma_block = (0.5 - var_inter)) %>%  -->
+<!--   mutate(empirical_variance_term_1 = (2/(m * n)) * ((msw + n * sigma_int)/sigma_total), -->
+<!--          empirical_variance_term_2_num = ((N - 2 * m) * msw^2 + (m - 1) * (msw + n * sigma_int)^2) * 0.4^2, -->
+<!--          empirical_variance_term_2_denom = 2 * ((N - 2 * m) * msw + (m - 1) * (msw + 2 * n * sigma_block) + (m - 1) * (msw + n * sigma_int))^2, -->
+<!--          empirical_variance = empirical_variance_term_1 + empirical_variance_term_2_num/empirical_variance_term_2_denom) %>%  -->
+<!--     pivot_longer(cols = c(d1, v1, d2, v2), names_to = "estimate", values_to = "value") %>%  -->
+<!--   filter(estimate != "d1" & estimate != "d2") %>%  -->
+<!--   mutate(`Interaction Proportion` = var_inter, n = k_count, j_count = factor(j_count)) %>%  -->
+<!--   ggplot(aes(x = j_count, y = ((value - empirical_variance)/empirical_variance), color = estimate, group = estimate)) + geom_point() +  -->
+<!--   geom_line() + facet_grid(n ~ `Interaction Proportion`, labeller = label_both) + -->
+<!--   theme_bw() + geom_hline(yintercept = 0) + xlab("m") + ylab("Relative Bias") + labs(color = "Estimate") + -->
+<!--   scale_color_discrete(labels = c("New Method", "Traditional Method")) -->
+<!-- ``` -->
+
+### Variance Ratios Code V1 (1000 reps)
+
+```{r, message=FALSE}
+sim_results3 <- read_csv("sim_results_1000reps_store_all.csv")
+sim_results3 %>% 
+  group_by(m, n, var_inter, var_block) %>% 
+  summarise_at(c("d1", "d2"), var) %>% 
+  mutate(actual_var_d1 = d1, actual_var_d2 = d2) %>% 
+  select(-c(d1, d2)) %>% 
+  cbind( (sim_results3 %>% group_by(m, n, var_inter, var_block) %>% summarise_at(c("v1", "v2"), mean) %>% ungroup() %>% select(v1, v2))) %>% 
+  mutate(ratio_d1 = v1/actual_var_d1,
+         ratio_d2 = v2/actual_var_d2) %>% 
+  pivot_longer(cols = c(ratio_d1, ratio_d2), names_to = "estimate", values_to = "value") %>%
+  filter(var_block != 0) %>% 
+  mutate(`Interaction Proportion` = var_inter, m = factor(m)) %>% 
+  ggplot(aes(x = m, y = value, color = estimate, group = estimate)) + geom_point() + 
+  geom_line() + facet_grid(n ~ `Interaction Proportion`, labeller = label_both) +
+  theme_bw() + xlab("m") + ylab("Variance Ratio") + labs(color = "Estimate") +
+  scale_color_discrete() + geom_hline(yintercept = 1)
+```
+
+### Variance Ratios Code V2 (10000 reps)
+
+```{r, message=FALSE}
+empir_var <- sim_resultskarina %>% group_by(m, n, var_inter) %>%  summarise_at(c("d1", "d2"), var) %>% ungroup() %>% mutate(actual_var_d1 = d1, actual_var_d2 = d2) %>% select(-c(d1, d2, m, n, var_inter))
+
+sim_resultskarina %>% group_by(m, n, var_inter) %>% 
+  select(-c(d1, d2)) %>% 
+  summarise_at(vars(v1, v2), mean) %>% 
+  cbind(empir_var) %>% 
+  mutate(ratio_d1 = v1/actual_var_d1,
+         ratio_d2 = v2/actual_var_d2) %>% 
+  pivot_longer(cols = c(ratio_d1, ratio_d2), names_to = "estimate", values_to = "value") %>%
+  mutate(`Interaction Proportion` = var_inter, m = factor(m)) %>% 
+  ggplot(aes(x = m, y = value, color = estimate, group = estimate)) + geom_point() + 
+  geom_line() + facet_grid(n ~ `Interaction Proportion`, labeller = label_both) +
+  theme_bw() + xlab("m") + ylab("Variance Ratio") + labs(color = "Estimate") +
+  scale_color_discrete() + geom_hline(yintercept = 1)
+```
+
+### take three
+
+```{r}
+sim_results_10 <- read_csv("sim_results_updated_dec16.csv")
+sim_results_10 %>% 
+  group_by(m, n, var_inter) %>% 
+  summarise_at(c("d1", "d2"), var) %>% 
+  mutate(actual_var_d1 = d1, actual_var_d2 = d2) %>% 
+  select(-c(d1, d2)) %>% 
+  cbind( (sim_results_10 %>% group_by(m, n, var_inter) %>% summarise_at(c("v1", "v2"), mean) %>% ungroup() %>% select(v1, v2))) %>% 
+  mutate(ratio_d1 = v1/actual_var_d1,
+         ratio_d2 = v2/actual_var_d2) %>% 
+  pivot_longer(cols = c(ratio_d1, ratio_d2), names_to = "estimate", values_to = "value") %>%
+  # filter(var_block != 0) %>% 
+  mutate(`Interaction Proportion` = var_inter, n = factor(n)) %>% 
+  ggplot(aes(x = n, y = value, color = estimate, group = estimate)) + geom_point() + 
+  geom_line() + facet_grid(m ~ `Interaction Proportion`, labeller = label_both) +
+  theme_bw() + xlab("n") + ylab("Variance Ratio") + labs(color = "Estimate") +
+  scale_color_discrete() + geom_hline(yintercept = 1)
+```
+```
+
+<!-- ### Table of Cell Estimates -->
+
+<!-- ```{r, message=F} -->
+<!-- sim_results2 %>%  -->
+<!--   kbl(col.names = c("j", "k", "$\\sigma^2_{\\alpha\\beta}$ Prop.", "i", "$\\sigma^2_e$", "reps", "d1", -->
+<!--                     "v1", "d2", "v2", "delta")) %>%  -->
+<!--   kable_minimal(full_width = F) -->
+<!-- ``` -->
+
+<!-- ## Simulations Updated -->
+
+<!-- Storing everything this time -->
+
+<!-- ```{r} -->
+<!-- sim_results3 <- read_csv("sim_results_1000reps_store_all.csv") -->
+<!-- ``` -->
+
+<!-- 1000 reps per cell, m = 2 or 10, n = 10 or 100. Interaction variance 0.00 and block 0.50, interaction variance 0.10 and block 0.40, or interaction and block both 0.00. -->
+
+<!-- ```{r} -->
+<!-- sim_results3 %>%  -->
+<!--   group_by(m, n, var_inter, var_block) %>%  -->
+<!--   summarise_all(mean) %>%  -->
+<!--   kbl %>%  -->
+<!--     kable_minimal(full_width = F) -->
+<!-- ``` -->
+
+<!-- ### Effect Size Bias -->
+
+<!-- ```{r} -->
+<!-- sim_results3 %>%  -->
+<!--   group_by(m, n, var_inter, var_block) %>%  -->
+<!--   summarise_all(mean) %>%  -->
+<!--   pivot_longer(cols = c(d1, v1, d2, v2), names_to = "estimate", values_to = "value") %>%  -->
+<!--   filter(estimate != "v1" & estimate != "v2") %>%  -->
+<!--   mutate(`Block Proportion` = var_block, m = factor(m)) %>%  -->
+<!--   ggplot(aes(x = m, y = (value - 0.4), color = estimate, group = estimate)) + geom_point() + -->
+<!--   geom_line() + facet_grid(n ~ `Block Proportion`, labeller = label_both) + -->
+<!--   theme_bw() + geom_hline(yintercept = 0) + xlab("m") + ylab("Bias") + labs(color = "Estimate") + -->
+<!--   scale_color_discrete(labels = c("New Method", "Traditional Method")) -->
+<!-- ``` -->
+
+<!-- Table of variance ratios: -->
+
+<!-- ```{r} -->
+<!-- sim_results3 %>%  -->
+<!--   group_by(m, n, var_inter, var_block) %>%  -->
+<!--   summarise_at(c("d1", "d2"), var) %>%  -->
+<!--   mutate(actual_var_d1 = d1, actual_var_d2 = d2) %>%  -->
+<!--   select(-c(d1, d2)) %>%  -->
+<!--   cbind( (sim_results3 %>% group_by(m, n, var_inter, var_block) %>% summarise_at(c("v1", "v2"), mean) %>% ungroup() %>% select(v1, v2))) %>%  -->
+<!--   mutate(ratio_d1 = v1/actual_var_d1, -->
+<!--          ratio_d2 = v2/actual_var_d2) %>%  -->
+<!--   kbl() %>%  -->
+<!--     kable_minimal(full_width = F) -->
+<!-- ``` -->
+
+
+<!-- ```{r} -->
+<!-- sim_results3 %>%  -->
+<!--   group_by(m, n, var_inter, var_block) %>%  -->
+<!--   summarise_at(c("d1", "d2"), var) %>%  -->
+<!--   mutate(actual_var_d1 = d1, actual_var_d2 = d2) %>%  -->
+<!--   select(-c(d1, d2)) %>%  -->
+<!--   cbind( (sim_results3 %>% group_by(m, n, var_inter, var_block) %>% summarise_at(c("v1", "v2"), mean) %>% ungroup() %>% select(v1, v2))) %>%  -->
+<!--   mutate(ratio_d1 = v1/actual_var_d1, -->
+<!--          ratio_d2 = v2/actual_var_d2) %>%  -->
+<!--   pivot_longer(cols = c(ratio_d1, ratio_d2), names_to = "estimate", values_to = "value") %>% -->
+<!--   mutate(`Block Proportion` = var_block, m = factor(m)) %>%  -->
+<!--   ggplot(aes(x = m, y = value, color = estimate, group = estimate)) + geom_point() +  -->
+<!--   geom_line() + facet_grid(n ~ `Block Proportion`, labeller = label_both) + -->
+<!--   theme_bw() + xlab("m") + ylab("Variance Ratio") + labs(color = "Estimate") + -->
+<!--   scale_color_discrete() -->
+<!-- ``` -->
+
