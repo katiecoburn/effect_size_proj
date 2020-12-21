@@ -25,9 +25,12 @@ d1 and v1 are the effect size and variance estimates with the adjustment. d2 and
 Effect size:
 
 $$
-D_1 = \frac{\Delta}{\sqrt{\sigma^2_t}}\sqrt{\frac{(N - 2m)\sigma^2_e + (m - 1)(\sigma^2_e + 2n\sigma^2_\beta) + (m - 1)(\sigma^2_e + n\sigma^2_{\alpha\beta})}{(N - 2)\sigma^2_t}}
+D_1 = \biggl(\frac{Y}{S}\biggr)\sqrt{\frac{(N - 2m)\sigma^2_e + (m - 1)(\sigma^2_e + 2n\sigma^2_\beta) + (m - 1)(\sigma^2_e + n\sigma^2_{\alpha\beta})}{(N - 2)\sigma^2_t}}
 $$
-
+where,
+$$
+S^2=SS/(N-2)
+$$
 Variance of effect size:
 
 $$
@@ -39,7 +42,7 @@ $$
 Effect size:
 
 $$
-D_2 = \frac{\Delta}{\sqrt{\sigma^2_t}}
+D_2 = \biggl(\frac{Y}{S}\biggr)
 $$
 
 <!-- Variance of effect size if interaction and block are **not** equal to zero: -->
