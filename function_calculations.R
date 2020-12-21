@@ -1,5 +1,5 @@
 trad_es_calc <- function(delta, msw, mswb, mswab, m, n, sigma_error_pop, sigma_block_pop, 
-                         sigma_int_pop, sigma_total_pop, ...){
+                         sigma_int_pop, sigma_total_pop, ss_total, ...){
   
   N <- 2 * m * n
   
@@ -17,7 +17,7 @@ trad_es_calc <- function(delta, msw, mswb, mswab, m, n, sigma_error_pop, sigma_b
 }
 
 par_est_calc <- function(delta, msw, mswb, mswab, m, n, sigma_error_pop, sigma_block_pop, 
-                         sigma_int_pop, sigma_total_pop, ...){
+                         sigma_int_pop, sigma_total_pop, ss_total, ...){
   # this is the version in excel spreadsheet karina sent on 11/18/20
   
   N <- 2 * m * n
