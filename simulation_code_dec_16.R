@@ -70,18 +70,20 @@ our_simulation_function <- function(i_count, j_count, k_count, var_error,
     
     # trad_es_results[[g]] <- trad_es_calc(delta = delta, m = m, n = (i_count*j_count*k_count), sigma_total = 1, sigma_block = var_block, sigma_int = var_inter)
     # Now we do an anova on the generated data to get the mean squares:
-    aov_res <- summary(aov(data$y ~ data$block * data$group))[[1]]$`Mean Sq`
-    msw <- aov_res[4]
-    mswb <- aov_res[1]
-    mswab <- aov_res[3]
+    
+    msw <- summary(aov(data$y ~ data$block * data$group))[[1]]$`Mean Sq`[4]
+    mswb <- summary(aov(data$y ~ data$block * data$group))[[1]]$`Mean Sq`[1]
+    mswab <- summary(aov(data$y ~ data$block * data$group))[[1]]$`Mean Sq`[3]
+    total_sum_squares <- sum(summary(aov(data$y ~ data$block * data$group))[[1]]$`Sum Sq`[-2])
     
     trad_es_results[[g]] <- trad_es_calc(delta = delta, m = m, n = (i_count*j_count*k_count), msw = msw,
                                          mswb = mswb, mswab = mswab, sigma_total_pop = 1, 
                                          sigma_error_pop = var_error, sigma_block_pop = var_block, 
-                                         sigma_int_pop = var_inter)
+                                         sigma_int_pop = var_inter, ss_total = total_sum_squares)
     our_es_results[[g]] <- par_est_calc(delta = delta, sigma_total_pop = 1, sigma_block_pop = var_block, 
                                         sigma_int_pop = var_inter, sigma_error_pop = var_error, m = m, 
-                                        n = (i_count*j_count*k_count), msw = msw, mswb = mswb, mswab = mswab)
+                                        n = (i_count*j_count*k_count), msw = msw, mswb = mswb, 
+                                        mswab = mswab, ss_total = total_sum_squares)
     }
   
   trad_es_results <- bind_rows(trad_es_results) %>% 

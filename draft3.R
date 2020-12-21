@@ -36,4 +36,4 @@ sim_results2 %>%
   summarise_at(vars(d1, v1, d2, v2), mean)
 
 
-write_csv(sim_results, "sim_results_updated_dec21.csv")
+write_csv(sim_results2, "sim_results_updated_dec21.csv")

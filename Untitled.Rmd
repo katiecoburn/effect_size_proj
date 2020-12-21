@@ -1,0 +1,121 @@
+---
+title: "simulation update"
+author: "Katie Coburn"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+---
+
+## Setup
+
+```{r, message=FALSE, echo=FALSE}
+library(tidyverse)
+library(kableExtra)
+library(ggthemes)
+# source("function_calculations.R")
+# source("simulation_code.R")
+```
+
+d1 and v1 are the effect size and variance estimates with the adjustment. d2 and v2 are "traditional" methods of estimating the effect size and variance. (Code for both of these is located in **"function_calculations.R"**.)
+
+### Our Equations:
+
+$$
+\hat{\sigma^2_e} = msw
+$$
+
+$$
+\hat{\sigma^2_\beta} = \frac{mswb - msw}{2n}
+$$
+
+$$
+\hat{\sigma^2_{\alpha\beta}} = \frac{mswab - msw}{n}
+$$
+$$
+\hat{\sigma^2_{t}} = \hat{\sigma^2_e} + \hat{\sigma^2_{\alpha\beta}} + \hat{\sigma^2_\beta}
+$$
+
+$$
+d_1 = \frac{y_{1.}-y_{2.}}{\sqrt{\hat{\sigma^2_t}}}\sqrt{\frac{(N - 2m)\sigma^2_e + (m - 1)(\sigma^2_e + 2n\sigma^2_\beta) + (m - 1)(\sigma^2_e + n\sigma^2_{\alpha\beta})}{(N - 2)\sigma^2_t}}
+$$
+
+Variance of effect size:
+
+$$
+v_1 = \frac{2}{mn}\left(\frac{\sigma^2_e + n\sigma^2_{\alpha\beta}}{\sigma^2_t}\right) + \frac{((N - 2 m)\sigma^4_e + (m - 1)(\sigma^2_e + 2n\sigma^2_{\beta})^2 + (m - 1)(\sigma^2_e + n\sigma^2_{\alpha\beta})^2)d_1^2}{2((N - 2m)\sigma^2_e + (m - 1)(\sigma^2_e + 2n\sigma^2_{\beta}) + (m - 1)(\sigma^2_e + n\sigma^2_{\alpha\beta}))^2}
+$$
+
+### Traditional Equations:
+
+Effect size:
+
+$$
+d_2 = \frac{y_{1.}-y_{2.}}{\sqrt{\hat{\sigma^2_t}}}
+$$
+
+Variance of effect size:
+
+$$
+v_2 = \frac{2}{mn} + \frac{d_2^2}{2(N - 2)}
+$$
+
+## Simulations:
+
+We did 5000 replications per cell with 3 levels of variance; (1) **interaction and block are both 0**; (2) **interaction is 0.10, block is 0.40**; and (3) **interaction is 0.30, block is 0.20**. We used 3 levels of n (sample size per cell), 10, 100, and 500. m is fixed to 2 (generating data for the interaction across levels of m will be tricky, so we started with m of 2 and increased n to increase the sample size). This is 9 cells.
+
+This table shows the variance ratios.
+
+```{r}
+sim_results_10 <- read_csv("sim_results_updated_dec21.csv")
+sim_results_10 %>% 
+  group_by(m, n, var_block) %>% 
+  summarise_at(c("d1", "d2"), var) %>% 
+  mutate(actual_var_d1 = d1, actual_var_d2 = d2) %>% 
+  select(-c(d1, d2)) %>% 
+  cbind( (sim_results_10 %>% group_by(m, n, var_block) %>% summarise_at(c("v1", "v2"), mean) %>% ungroup() %>% select(v1, v2))) %>% 
+  mutate(ratio_d1 = v1/actual_var_d1,
+         ratio_d2 = v2/actual_var_d2) %>% 
+  kbl() %>% 
+  kable_minimal(full_width = F)
+```
+
+```{r, message=FALSE, echo=FALSE}
+sim_results_10 %>% 
+  group_by(n, var_block, m) %>% 
+  summarise_at(vars(d1, v1, d2, v2), mean) %>% 
+  kbl() %>% 
+  kable_minimal(full_width = F)
+```
+
+```{r}
+sim_results_10 %>% 
+  group_by(n, var_block, m) %>% 
+  summarise_at(vars(d1, v1, d2, v2), mean) %>% 
+  pivot_longer(cols = c(d1, v1, d2, v2), names_to = "estimate", values_to = "value") %>% 
+  filter(estimate != "v1" & estimate != "v2") %>% 
+  mutate(`Block Proportion` = var_block, n = factor(n)) %>% 
+  ggplot(aes(x = n, y = value, color = estimate, group = estimate)) + geom_point() +
+  geom_line(aes(group = estimate)) + facet_grid(~ `Block Proportion`, labeller = label_both) +
+  theme_bw() + geom_hline(yintercept = 0.40) + xlab("n") + ylab("Value") + labs(color = "Estimate") +
+  scale_color_discrete(labels = c("New Method", "Traditional Method"))
+```
+
+```{r}
+sim_results_10 %>% 
+  group_by(m, n, var_block) %>% 
+  summarise_at(c("d1", "d2"), var) %>% 
+  mutate(actual_var_d1 = d1, actual_var_d2 = d2) %>% 
+  select(-c(d1, d2)) %>% 
+  cbind( (sim_results_10 %>% group_by(m, n, var_block) %>% summarise_at(c("v1", "v2"), mean) %>% ungroup() %>% select(v1, v2))) %>% 
+  mutate(ratio_d1 = v1/actual_var_d1,
+         ratio_d2 = v2/actual_var_d2) %>% 
+  pivot_longer(cols = c(ratio_d1, ratio_d2), names_to = "estimate", values_to = "value") %>%
+  # filter(var_block != 0) %>% 
+  mutate(`Block Proportion` = var_block, n = factor(n)) %>% 
+  ggplot(aes(x = n, y = value, color = estimate, group = estimate)) + geom_point() + 
+  geom_line() + facet_grid(~ `Block Proportion`, labeller = label_both) +
+  theme_bw() + xlab("n") + ylab("Variance Ratio") + labs(color = "Estimate") +
+    scale_color_discrete(labels = c("New Method", "Traditional Method")) + geom_hline(yintercept = 1)
+```
+
