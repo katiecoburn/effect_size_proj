@@ -74,7 +74,7 @@ our_simulation_function <- function(i_count, j_count, k_count, var_error,
     msw <- summary(aov(data$y ~ data$block * data$group))[[1]]$`Mean Sq`[4]
     mswb <- summary(aov(data$y ~ data$block * data$group))[[1]]$`Mean Sq`[1]
     mswab <- summary(aov(data$y ~ data$block * data$group))[[1]]$`Mean Sq`[3]
-    total_sum_squares <- sum(summary(aov(data$y ~ data$block * data$group))[[1]]$`Sum Sq`[-2])
+    total_sum_squares <- sum(summary(aov(data$y ~ data$block * data$group))[[1]]$`Sum Sq`)
     
     trad_es_results[[g]] <- trad_es_calc(delta = delta, m = m, n = (i_count*j_count*k_count), msw = msw,
                                          mswb = mswb, mswab = mswab, sigma_total_pop = 1, 
