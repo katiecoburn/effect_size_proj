@@ -6,6 +6,7 @@ trad_es_calc <- function(delta, msw, mswb, mswab, m, n, sigma_error_pop, sigma_b
   sigma_error_est <- msw
   sigma_block_est <- (mswb - msw)/(2*n)
   sigma_int_est <- (mswab - msw)/n
+  # sigma_total_est <- sigma_error_est + sigma_block_est + sigma_int_est
   sigma_total_est <- ss_total/(N - 2)
   
   d2 <- delta/sqrt(sigma_total_est)
@@ -25,6 +26,7 @@ par_est_calc <- function(delta, msw, mswb, mswab, m, n, sigma_error_pop, sigma_b
   sigma_error_est <- msw
   sigma_block_est <- (mswb - msw)/(2*n)
   sigma_int_est <- (mswab - msw)/n
+  # sigma_total_est <- sigma_error_est + sigma_block_est + sigma_int_est
   sigma_total_est <- ss_total/(N - 2)
   
   d1 <- sqrt(((N - 2 * m) * sigma_error_pop + (m - 1) * (sigma_error_pop + 2 * n * sigma_block_pop) + (m - 1) * (sigma_error_pop + n * sigma_int_pop))/((N - 2) * sigma_total_pop)) * delta/sqrt(sigma_total_est)

@@ -1,5 +1,6 @@
 source("simulation_code_dec_16.R")
 source("function_calculations.R")
+library(car)
 
 # 
 # our_simulation_function(i_count = 2, j_count = 4, 
@@ -36,4 +37,4 @@ sim_results2 %>%
   summarise_at(vars(d1, v1, d2, v2), mean)
 
 
-write_csv(sim_results2, "sim_results_updated_dec21.csv")
+write_csv(sim_results2, "sim_results_sslm_dec21.csv")
