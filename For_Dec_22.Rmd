@@ -21,23 +21,9 @@ d1 and v1 are the effect size and variance estimates with the adjustment. d2 and
 
 ### Our Equations:
 
-$$
-\hat{\sigma^2_e} = msw
-$$
 
 $$
-\hat{\sigma^2_\beta} = \frac{mswb - msw}{2n}
-$$
-
-$$
-\hat{\sigma^2_{\alpha\beta}} = \frac{mswab - msw}{n}
-$$
-$$
-\hat{\sigma^2_{t}} = \hat{\sigma^2_e} + \hat{\sigma^2_{\alpha\beta}} + \hat{\sigma^2_\beta}
-$$
-
-$$
-d_1 = \frac{y_{1.}-y_{2.}}{\sqrt{\hat{\sigma^2_t}}}\sqrt{\frac{(N - 2m)\sigma^2_e + (m - 1)(\sigma^2_e + 2n\sigma^2_\beta) + (m - 1)(\sigma^2_e + n\sigma^2_{\alpha\beta})}{(N - 2)\sigma^2_t}}
+d_1 = \biggl(\frac{Y}{S}\biggr)\sqrt{\frac{(N - 2m)\sigma^2_e + (m - 1)(\sigma^2_e + 2n\sigma^2_\beta) + (m - 1)(\sigma^2_e + n\sigma^2_{\alpha\beta})}{(N - 2)\sigma^2_t}}
 $$
 
 Variance of effect size:
@@ -51,7 +37,7 @@ $$
 Effect size:
 
 $$
-d_2 = \frac{y_{1.}-y_{2.}}{\sqrt{\hat{\sigma^2_t}}}
+d_2 = \biggl(\frac{Y}{S}\biggr)
 $$
 
 Variance of effect size:
@@ -64,7 +50,26 @@ $$
 
 We did 5000 replications per cell with 3 levels of variance; (1) **interaction and block are both 0**; (2) **interaction is 0.10, block is 0.40**; and (3) **interaction is 0.30, block is 0.20**. We used 3 levels of n (sample size per cell), 10, 100, and 500. m is fixed to 2 (generating data for the interaction across levels of m will be tricky, so we started with m of 2 and increased n to increase the sample size). This is 9 cells.
 
-### Sigma Total Calculated as Sum of 3 other Sigma Estimates
+### $S^2$ Calculated as Sum of 3 other Sigma Estimates
+
+
+$$
+\hat{\sigma^2_e} = msw
+$$
+
+
+$$
+\hat{\sigma^2_\beta} = \frac{msb - msw}{2n}
+$$
+
+
+$$
+\hat{\sigma^2_{\alpha\beta}} = \frac{msab - msw}{n}
+$$
+
+$$
+\hat{\sigma^2_{t}} = \hat{\sigma^2_e} + \hat{\sigma^2_{\alpha\beta}} + \hat{\sigma^2_\beta}
+$$
 
 ```{r}
 sim_results_10 <- read_csv("sim_results_updated_dec21.csv")
@@ -119,7 +124,11 @@ sim_results_10 %>%
     scale_color_discrete(labels = c("New Method", "Traditional Method")) + geom_hline(yintercept = 1)
 ```
 
-### Sigma Total Calculated as Type 3 SS from ANOVA divided by N - 2
+### $S^2$ Calculated as SS from ANOVA divided by N - 2
+
+$$
+S^2=SS/(N-2)
+$$
 
 ```{r}
 sim_results_11 <- read_csv("sim_results_sslm_dec21.csv")
