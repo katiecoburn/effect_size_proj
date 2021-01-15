@@ -4,7 +4,9 @@ m <- 2
 n <- 20
 N <- 2*m*n
 var_e <- 1
-var_total <- var_e
+var_block <- 0.0
+var_inter <- 0.0
+var_total <- var_e + var_block + var_inter
 
 output <- data.frame(d1 = NA, d2 = NA, v1 = NA, v2 = NA)
 
