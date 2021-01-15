@@ -1,7 +1,7 @@
 
 df_clean <- data.frame()
 
-for (j in 1:10000){   
+for (j in 1:1000){   
   
 ##############################################################
 #Start with basic case where sigma_block & sigma_inter are zero
@@ -93,7 +93,18 @@ block<- rep(seq(1, m), (N/m))
 delta <- mean(y_trt) - mean(y_cnt)
 
 #Estimate SS using formula
-s<- sqrt(((n*m - 1)*var_trt+(n*m-1)*var_cnt)/(N-2))  #This is: S= sqrt(SS_error/(N-2))
+# s<- sqrt(((n*m - 1)*var_trt+(n*m-1)*var_cnt)/(N-2))  #This is: S= sqrt(SS_error/(N-2))
+
+### Added KC 1/15
+# SS as sum of chi-squared distributions
+
+ssw <- rchisq(n = 1, df = (2 * m * n - 2 * m))
+ssb <- rchisq(n = 1, df = (m - 1))
+ssab <- rchisq(n = 1, df = (m - 1))
+
+s <- sqrt((ssw + ssb + ssab)/(N - 2))
+
+### Added KC 1/15
 
 #this matches what we get from summary(lm1)$sigma, so we are good
 
@@ -255,11 +266,22 @@ block<- rep(seq(1, m), (N/m))
 delta <- mean(y_trt) - mean(y_cnt)
 
 #Calculate SS using formulas
-ss1 <- ((n*m - 1)*var_trt+(n*m-1)*var_cnt)/(N-2)  #SS Error/(N-2)
+# ss1 <- ((n*m - 1)*var_trt+(n*m-1)*var_cnt)/(N-2)  #SS Error/(N-2)
+# 
+# ss2<- (n*arms*((mean(y_block1) - grandmeanpop)^2  + (mean(y_block2) - grandmeanpop)^2))/(N-2) #SS Block/(N-2)
+# 
+# s<- sqrt(ss1 + ss2) # S = sqrt(SS/(N-2))
 
-ss2<- (n*arms*((mean(y_block1) - grandmeanpop)^2  + (mean(y_block2) - grandmeanpop)^2))/(N-2) #SS Block/(N-2)
+### Added KC 1/15
+# SS as sum of chi-squared distributions
 
-s<- sqrt(ss1 + ss2) # S = sqrt(SS/(N-2))
+ssw <- rchisq(n = 1, df = (2 * m * n - 2 * m))
+ssb <- rchisq(n = 1, df = (m - 1))
+ssab <- rchisq(n = 1, df = (m - 1))
+
+s <- sqrt((ssw + ssb + ssab)/(N - 2))
+
+### Added KC 1/15
 
 #Determine d1 and d2
 d2 <- delta/s
@@ -404,17 +426,27 @@ block<- rep(seq(1, m), (N/m))
 #calculate delta
 delta <- mean(y_trt) - mean(y_cnt)
 
-ss1 <- ((n*m - 1)*var_trt+(n*m-1)*var_cnt)/(N-2)  #SS_Error/(N-2)
+# ss1 <- ((n*m - 1)*var_trt+(n*m-1)*var_cnt)/(N-2)  #SS_Error/(N-2)
+# 
+# ss2<- (n*arms*((mean(y_block1) - grandmeanpop)^2  + (mean(y_block2) - grandmeanpop)^2))/(N-2) #SS_Block/(N-2)
+# 
+# ss3<- (n*(  (mean(Y_trt1) - mean(y_trt) - mean(y_block1) + grandmeanpop)^2 
+#           + (mean(Y_trt2)   - mean(y_trt) - mean(y_block2) + grandmeanpop)^2 
+#           + (mean(Y_cnt1) - mean(y_cnt) - mean(y_block1) + grandmeanpop)^2 
+#           + (mean(Y_cnt2) - mean(y_cnt) - mean(y_block2) + grandmeanpop)^2 ))/(N-2)  #SS_inter/(N-2)
+# 
+# s<- sqrt(ss1 + ss2 + ss3) # S = sqrt(SS/(N-2))
 
-ss2<- (n*arms*((mean(y_block1) - grandmeanpop)^2  + (mean(y_block2) - grandmeanpop)^2))/(N-2) #SS_Block/(N-2)
+### Added KC 1/15
+# SS as sum of chi-squared distributions
 
-ss3<- (n*(  (mean(Y_trt1) - mean(y_trt) - mean(y_block1) + grandmeanpop)^2 
-          + (mean(Y_trt2)   - mean(y_trt) - mean(y_block2) + grandmeanpop)^2 
-          + (mean(Y_cnt1) - mean(y_cnt) - mean(y_block1) + grandmeanpop)^2 
-          + (mean(Y_cnt2) - mean(y_cnt) - mean(y_block2) + grandmeanpop)^2 ))/(N-2)  #SS_inter/(N-2)
+ssw <- rchisq(n = 1, df = (2 * m * n - 2 * m))
+ssb <- rchisq(n = 1, df = (m - 1))
+ssab <- rchisq(n = 1, df = (m - 1))
 
-s<- sqrt(ss1 + ss2 + ss3) # S = sqrt(SS/(N-2))
+s <- sqrt((ssw + ssb + ssab)/(N - 2))
 
+### Added KC 1/15
 
 #Determine d1 and d2
 d2 <- delta/s
@@ -567,13 +599,24 @@ for (j in 1:10000){
   delta <- mean(y_trt) - mean(y_cnt)
   
   #Calculate SS using formulas
-  ss1 <- ((n*m - 1)*var_trt+(n*m-1)*var_cnt)/(N-2)  #SS Error/(N-2)
+  # ss1 <- ((n*m - 1)*var_trt+(n*m-1)*var_cnt)/(N-2)  #SS Error/(N-2)
+  # 
+  # ss2<- (n*arms*((mean(y_block1) - grandmeanpop)^2  + (mean(y_block2) - grandmeanpop)^2))/(N-2) #SS Block/(N-2)
+  # 
+  # #s<- sqrt(ss1 + ss2) # S = sqrt(SS/(N-2))
+  # 
+  # s<- sqrt(ss2) 
   
-  ss2<- (n*arms*((mean(y_block1) - grandmeanpop)^2  + (mean(y_block2) - grandmeanpop)^2))/(N-2) #SS Block/(N-2)
+  ### Added KC 1/15
+  # SS as sum of chi-squared distributions
   
-  #s<- sqrt(ss1 + ss2) # S = sqrt(SS/(N-2))
+  ssw <- rchisq(n = 1, df = (2 * m * n - 2 * m))
+  ssb <- rchisq(n = 1, df = (m - 1))
+  ssab <- rchisq(n = 1, df = (m - 1))
   
-  s<- sqrt(ss2) 
+  s <- sqrt((ssw + ssb + ssab)/(N - 2))
+  
+  ### Added KC 1/15
   
   #Determine d1 and d2
   d2 <- delta/s
@@ -728,7 +771,18 @@ for (j in 1:10000){
   delta <- mean(y_trt) - mean(y_cnt)
   
   #Estimate SS using formula
-  s<- sqrt(((n*m - 1)*var_trt+(n*m-1)*var_cnt)/(N-2))  #This is: S= sqrt(SS_error/(N-2))
+  # s<- sqrt(((n*m - 1)*var_trt+(n*m-1)*var_cnt)/(N-2))  #This is: S= sqrt(SS_error/(N-2))
+  
+  ### Added KC 1/15
+  # SS as sum of chi-squared distributions
+  
+  ssw <- rchisq(n = 1, df = (2 * m * n - 2 * m))
+  ssb <- rchisq(n = 1, df = (m - 1))
+  ssab <- rchisq(n = 1, df = (m - 1))
+  
+  s <- sqrt((ssw + ssb + ssab)/(N - 2))
+  
+  ### Added KC 1/15
   
   #this matches what we get from summary(lm1)$sigma, so we are good
   
@@ -890,11 +944,22 @@ for (j in 1:10000){
   delta <- mean(y_trt) - mean(y_cnt)
   
   #Calculate SS using formulas
-  ss1 <- ((n*m - 1)*var_trt+(n*m-1)*var_cnt)/(N-2)  #SS Error/(N-2)
+  # ss1 <- ((n*m - 1)*var_trt+(n*m-1)*var_cnt)/(N-2)  #SS Error/(N-2)
+  # 
+  # ss2<- (n*arms*((mean(y_block1) - grandmeanpop)^2  + (mean(y_block2) - grandmeanpop)^2))/(N-2) #SS Block/(N-2)
+  # 
+  # s<- sqrt(ss1 + ss2) # S = sqrt(SS/(N-2))
   
-  ss2<- (n*arms*((mean(y_block1) - grandmeanpop)^2  + (mean(y_block2) - grandmeanpop)^2))/(N-2) #SS Block/(N-2)
+  ### Added KC 1/15
+  # SS as sum of chi-squared distributions
   
-  s<- sqrt(ss1 + ss2) # S = sqrt(SS/(N-2))
+  ssw <- rchisq(n = 1, df = (2 * m * n - 2 * m))
+  ssb <- rchisq(n = 1, df = (m - 1))
+  ssab <- rchisq(n = 1, df = (m - 1))
+  
+  s <- sqrt((ssw + ssb + ssab)/(N - 2))
+  
+  ### Added KC 1/15
   
   #Determine d1 and d2
   d2 <- delta/s
@@ -1038,17 +1103,27 @@ for (j in 1:10000){
   #calculate delta
   delta <- mean(y_trt) - mean(y_cnt)
   
-  ss1 <- ((n*m - 1)*var_trt+(n*m-1)*var_cnt)/(N-2)  #SS_Error/(N-2)
+  # ss1 <- ((n*m - 1)*var_trt+(n*m-1)*var_cnt)/(N-2)  #SS_Error/(N-2)
+  # 
+  # ss2<- (n*arms*((mean(y_block1) - grandmeanpop)^2  + (mean(y_block2) - grandmeanpop)^2))/(N-2) #SS_Block/(N-2)
+  # 
+  # ss3<- (n*(  (mean(Y_trt1) - mean(y_trt) - mean(y_block1) + grandmeanpop)^2 
+  #             + (mean(Y_trt2)   - mean(y_trt) - mean(y_block2) + grandmeanpop)^2 
+  #             + (mean(Y_cnt1) - mean(y_cnt) - mean(y_block1) + grandmeanpop)^2 
+  #             + (mean(Y_cnt2) - mean(y_cnt) - mean(y_block2) + grandmeanpop)^2 ))/(N-2)  #SS_inter/(N-2)
+  # 
+  # s<- sqrt(ss1 + ss2 + ss3) # S = sqrt(SS/(N-2))
   
-  ss2<- (n*arms*((mean(y_block1) - grandmeanpop)^2  + (mean(y_block2) - grandmeanpop)^2))/(N-2) #SS_Block/(N-2)
+  ### Added KC 1/15
+  # SS as sum of chi-squared distributions
   
-  ss3<- (n*(  (mean(Y_trt1) - mean(y_trt) - mean(y_block1) + grandmeanpop)^2 
-              + (mean(Y_trt2)   - mean(y_trt) - mean(y_block2) + grandmeanpop)^2 
-              + (mean(Y_cnt1) - mean(y_cnt) - mean(y_block1) + grandmeanpop)^2 
-              + (mean(Y_cnt2) - mean(y_cnt) - mean(y_block2) + grandmeanpop)^2 ))/(N-2)  #SS_inter/(N-2)
+  ssw <- rchisq(n = 1, df = (2 * m * n - 2 * m))
+  ssb <- rchisq(n = 1, df = (m - 1))
+  ssab <- rchisq(n = 1, df = (m - 1))
   
-  s<- sqrt(ss1 + ss2 + ss3) # S = sqrt(SS/(N-2))
+  s <- sqrt((ssw + ssb + ssab)/(N - 2))
   
+  ### Added KC 1/15
   
   #Determine d1 and d2
   d2 <- delta/s
