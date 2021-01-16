@@ -98,9 +98,9 @@ delta <- mean(y_trt) - mean(y_cnt)
 ### Added KC 1/15
 # SS as sum of chi-squared distributions
 
-ssw <- rchisq(n = 1, df = (2 * m * n - 2 * m))
-ssb <- rchisq(n = 1, df = (m - 1))
-ssab <- rchisq(n = 1, df = (m - 1))
+ssw <- var_e*rchisq(n = 1, df = (2 * m * n - 2 * m))
+ssb <- (var_e + 2*n*var_block)*rchisq(n = 1, df = (m - 1))
+ssab <- (var_e + n*var_inter)*rchisq(n = 1, df = (m - 1))
 
 s <- sqrt((ssw + ssb + ssab)/(N - 2))
 
@@ -174,7 +174,7 @@ df_clean <- data.frame()
 
 for (j in 1:10000){   
 m=2
-n=500
+n=100
 N=2*m*n
 arms = 2
 var_e= 0.3
@@ -275,13 +275,14 @@ delta <- mean(y_trt) - mean(y_cnt)
 ### Added KC 1/15
 # SS as sum of chi-squared distributions
 
-ssw <- rchisq(n = 1, df = (2 * m * n - 2 * m))
-ssb <- rchisq(n = 1, df = (m - 1))
-ssab <- rchisq(n = 1, df = (m - 1))
+ssw <- var_e*rchisq(n = 1, df = (2 * m * n - 2 * m))
+ssb <- (var_e + 2*n*var_block)*rchisq(n = 1, df = (m - 1))
+ssab <- (var_e + n*var_inter)*rchisq(n = 1, df = (m - 1))
 
 s <- sqrt((ssw + ssb + ssab)/(N - 2))
 
 ### Added KC 1/15
+
 
 #Determine d1 and d2
 d2 <- delta/s
@@ -347,7 +348,7 @@ df_clean <- data.frame()
 
 for (j in 1:10000){ 
 m=2
-n=500
+n=100
 N=2*m*n
 arms = 2
 var_e=0.3
@@ -440,13 +441,14 @@ delta <- mean(y_trt) - mean(y_cnt)
 ### Added KC 1/15
 # SS as sum of chi-squared distributions
 
-ssw <- rchisq(n = 1, df = (2 * m * n - 2 * m))
-ssb <- rchisq(n = 1, df = (m - 1))
-ssab <- rchisq(n = 1, df = (m - 1))
+ssw <- var_e*rchisq(n = 1, df = (2 * m * n - 2 * m))
+ssb <- (var_e + 2*n*var_block)*rchisq(n = 1, df = (m - 1))
+ssab <- (var_e + n*var_inter)*rchisq(n = 1, df = (m - 1))
 
 s <- sqrt((ssw + ssb + ssab)/(N - 2))
 
 ### Added KC 1/15
+
 
 #Determine d1 and d2
 d2 <- delta/s
