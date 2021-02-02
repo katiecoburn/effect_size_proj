@@ -122,9 +122,9 @@ for(i in 1:length(m_vector)){
   n= n_vector[j]
   N=2*m*n
   arms = 2
-  var_e= 0.7
+  var_e= 0.6
   var_inter = 0
-  var_block = 0.3
+  var_block = 0.4
   var_total = var_e + var_inter + var_block
   
   var_y = 2*(var_e + n*var_inter)/(m*n)
@@ -230,9 +230,9 @@ for(i in 1:length(m_vector)){
   n= n_vector[j]
   N=2*m*n
   arms = 2
-  var_e=0.2
-  var_inter = 0.7
-  var_block = 0.1
+  var_e=0.6
+  var_inter = 0.2
+  var_block = 0.2
   var_total = var_e + var_inter + var_block
   
   var_y =  2*(var_e + n*var_inter)/(m*n)
