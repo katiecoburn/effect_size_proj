@@ -1,8 +1,17 @@
 
 ##############################################################
   #Start with basic case where sigma_block & sigma_inter are zero
-  m=10
-  n=500
+data_clean <- data.frame()
+n_vector<- c(10, 100, 500) 
+m_vector <- c(2, 4, 10)
+
+for(i in 1:length(m_vector)){
+  
+  m= m_vector[i]
+  
+  for(j in 1:length(n_vector)) {
+    
+  n= n_vector[j] 
   N=2*m*n
   arms = 2
   var_e= 1.0
@@ -22,7 +31,11 @@
   df_ssab = m -1
   ssab<- (var_e + n*var_inter)*rchisq(10000,  df_ssab)
   
-  df_total <- df_ssw + df_ssb + df_ssab
+  df_num<- ((N - 2 * m) * var_e + (m - 1) * (var_e + 2 * n * var_block) + (m - 1) * (var_e + n * var_inter))^2
+  
+  df_den <- ((N - 2 * m) * var_e^2 + (m - 1) * (var_e + 2 * n * var_block)^2 + (m - 1) * (var_e + n * var_inter)^2)
+  
+  df_total<- df_num/df_den
   
   sst <- ssw + ssb + ssab
   #sst<- ssw
@@ -56,42 +69,62 @@
   
   v1_g <- c^2*v1
   
-  cbind( mean(Y),
-         mean(S),
-         df_total,
-         mean(d1),
-         mean(g1),
-         mean(d2),
-         mean(g2),
-         mean(v1_term_1),
-         mean(v1_term_2),
-         mean(v1),
-         mean(v1_g),
-         mean(v2_term_1),
-         mean(v2_term_2),
-         mean(v2),
-         mean(v2_g),
-         var(d1),
-         var(g1),
-         mean(v1)/var(d1),
-         mean(v1_g)/var(g1),
-         var(d2),
-         var(g2),
-         mean(v2)/var(d2),
-         mean(v2_g)/var(g2))
+  result<- cbind( m, n, 
+                  var_block , 
+                  var_inter , 
+                  var_e,
+                  var_total,
+                  mean(Y),
+                  mean(S),
+                  df_total,
+                  mean(d1),
+                  mean(g1),
+                  mean(d2),
+                  mean(g2),
+                  mean(v1_term_1),
+                  mean(v1_term_2),
+                  mean(v1),
+                  mean(v1_g),
+                  mean(v2_term_1),
+                  mean(v2_term_2),
+                  mean(v2),
+                  mean(v2_g),
+                  var(d1),
+                  var(g1),
+                  mean(v1)/var(d1),
+                  mean(v1_g)/var(d1),
+                  var(d2),
+                  var(g2),
+                  mean(v2)/var(d2),
+                  mean(v2_g)/var(d2))
+  
+  data_clean<- rbind(data_clean, result)
+  
+  }}
+  
   
 
 
   ###########################################################
   ###########################################################
   #Move on to the second case where sigma_block=0.7 & sigma_inter=0
-  m=10
-  n=500
+
+data_clean <- data.frame()
+n_vector<- c(10, 100, 500) 
+m_vector <- c(2, 4, 10)
+
+for(i in 1:length(m_vector)){
+  
+  m= m_vector[i]
+  
+  for(j in 1:length(n_vector)) {
+    
+  n= n_vector[j]
   N=2*m*n
   arms = 2
-  var_e= 0.3
+  var_e= 0.7
   var_inter = 0
-  var_block = 0.7
+  var_block = 0.3
   var_total = var_e + var_inter + var_block
   
   var_y = 2*(var_e + n*var_inter)/(m*n)
@@ -106,7 +139,11 @@
   df_ssab = m -1
   ssab<- (var_e + n*var_inter)*rchisq(10000,  df_ssab)
   
-  df_total <- df_ssw + df_ssb + df_ssab
+  df_num<- ((N - 2 * m) * var_e + (m - 1) * (var_e + 2 * n * var_block) + (m - 1) * (var_e + n * var_inter))^2
+  
+  df_den <- ((N - 2 * m) * var_e^2 + (m - 1) * (var_e + 2 * n * var_block)^2 + (m - 1) * (var_e + n * var_inter)^2)
+  
+  df_total<- df_num/df_den
   
   sst <- ssw + ssb + ssab 
   
@@ -141,29 +178,38 @@
   
   v1_g <- c^2*v1
   
-  cbind( mean(Y),
-         mean(S),
-         df_total,
-         mean(d1),
-         mean(g1),
-         mean(d2),
-         mean(g2),
-         mean(v1_term_1),
-         mean(v1_term_2),
-         mean(v1),
-         mean(v1_g),
-         mean(v2_term_1),
-         mean(v2_term_2),
-         mean(v2),
-         mean(v2_g),
-         var(d1),
-         var(g1),
-         mean(v1)/var(d1),
-         mean(v1_g)/var(g1),
-         var(d2),
-         var(g2),
-         mean(v2)/var(d2),
-         mean(v2_g)/var(g2))
+  result<- cbind( m, n, 
+                  var_block , 
+                  var_inter , 
+                  var_e,
+                  var_total,
+                  mean(Y),
+                  mean(S),
+                  df_total,
+                  mean(d1),
+                  mean(g1),
+                  mean(d2),
+                  mean(g2),
+                  mean(v1_term_1),
+                  mean(v1_term_2),
+                  mean(v1),
+                  mean(v1_g),
+                  mean(v2_term_1),
+                  mean(v2_term_2),
+                  mean(v2),
+                  mean(v2_g),
+                  var(d1),
+                  var(g1),
+                  mean(v1)/var(d1),
+                  mean(v1_g)/var(d1),
+                  var(d2),
+                  var(g2),
+                  mean(v2)/var(d2),
+                  mean(v2_g)/var(d2))
+  
+  data_clean<- rbind(data_clean, result)
+  
+  }}
   
   
   ####################################################
@@ -201,7 +247,11 @@
   df_ssab = m -1
   ssab<- (var_e + n*var_inter)*rchisq(10000,  df_ssab)
   
-  df_total <- df_ssw + df_ssb + df_ssab
+  df_num<- ((N - 2 * m) * var_e + (m - 1) * (var_e + 2 * n * var_block) + (m - 1) * (var_e + n * var_inter))^2
+  
+  df_den <- ((N - 2 * m) * var_e^2 + (m - 1) * (var_e + 2 * n * var_block)^2 + (m - 1) * (var_e + n * var_inter)^2)
+  
+  df_total<- df_num/df_den
   
   sst <- ssw + ssb + ssab
   S<- sqrt(sst/(N-2))
@@ -257,11 +307,11 @@
                  var(d1),
                  var(g1),
                  mean(v1)/var(d1),
-                 mean(v1_g)/var(g1),
+                 mean(v1_g)/var(d1),
                  var(d2),
                  var(g2),
                  mean(v2)/var(d2),
-                 mean(v2_g)/var(g2))
+                 mean(v2_g)/var(d2))
   
   data_clean<- rbind(data_clean, result)
   
